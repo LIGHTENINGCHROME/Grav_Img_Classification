@@ -16,17 +16,18 @@ app.config["PREDICTIONS_CSV"] = os.path.join(app.root_path, "predictions.csv")
 # Ensure the upload folder exists
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-# Load the model once at startup
+# Load the model
 model = load_model('CustomMod.keras')
-# Pre-compute class names for predictions
-class_names = np.array([
+
+# Class names
+class_names = [
     "1080Lines", "1400Ripples", "Air_Compressor", "Blip", "Chirp",
     "Extremely_Loud", "Helix", "Koi_Fish", "Light_Modulation", 
     "Low_Frequency_Burst", "Low_Frequency_Lines", "No_Glitch", 
     "None_of_the_Above", "Paired_Doves", "Power_Line", 
     "Repeating_Blips", "Scattered_Light", "Scratchy", "Tomte", 
     "Violin_Mode", "Wandering_Line", "Whistle"
-])
+]
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -34,17 +35,18 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def preprocess_image(image_path, target_size=(120, 142)):
-    """Load and preprocess the image for model prediction."""
     img = image.load_img(image_path, target_size=target_size)
-    img_array = image.img_to_array(img) / 255.0  # Normalize within function
-    return np.expand_dims(img_array, axis=0)
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array /= 255.0
+    return img_array
 
 def save_predictions_to_csv(predictions):
-    """Save model predictions to a CSV file."""
     with open(app.config["PREDICTIONS_CSV"], mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["Image Name", "Predicted Label", "Confidence Level"])
-        writer.writerows([[pred['image_name'], pred['name'], round(pred['confidence'] * 100, 2)] for pred in predictions])
+        for pred in predictions:
+            writer.writerow([pred['image_name'], pred['name'], round(pred['confidence'] * 100, 2)])
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -64,12 +66,12 @@ def index():
             if not allowed_file(file.filename):
                 flash(f"File '{file.filename}' is not a valid image. Please upload a valid image file.")
                 continue
-
+            
             file_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
             file.save(file_path)
 
             img_array = preprocess_image(file_path)
-            pred = model.predict(img_array, verbose=0)[0]  # Use verbose=0 for faster processing
+            pred = model.predict(img_array)[0]
             top_index = np.argmax(pred)
             
             predictions.append({
