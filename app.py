@@ -5,6 +5,7 @@ import numpy as np
 import os
 import csv
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/uploads")
