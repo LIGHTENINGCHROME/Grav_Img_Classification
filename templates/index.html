@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Classifier</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Lexend:wght@400&display=swap" rel="stylesheet">
+    <style>
+        /* Full-width setup */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            font-family: 'Lexend', sans-serif; /* Default font */
+            background-color: #000000; /* Dark background */
+            color: #ecf0f1; /* Light text color */
+        }
+
+        /* Full-width section */
+        .full-width-section {
+            padding: 40px;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Background color for Upload & Predict Tab */
+        .upload-background {
+            background: radial-gradient(circle, #2c3e50, #34495e, #1c1c1c); /* Dark blue to grey slate gradient */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); /* Box shadow */
+            border-radius: 15px;
+            transition: transform 0.3s;
+            filter: url(#distortion); /* Apply distortion filter */
+        }
+
+        /* Background color for Info Tab */
+        .info-background {
+            background: radial-gradient(circle, #2c3e50, #34495e, #ff0000); /* Dark blue to grey to red gradient */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); /* Box shadow */
+            border-radius: 15px;
+            transition: transform 0.3s;
+            filter: url(#distortion); /* Apply distortion filter */
+        }
+
+        /* Content styling */
+        .tab-content {
+            width: 100%;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Outer shadow */
+        }
+
+        /* Heading styles */
+        h1, h3 {
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: 20px;
+            font-weight: 700; /* Bold */
+        }
+
+        /* Class names color */
+        .class-name {
+            color: #f39c12; /* Bright orange for class names */
+        }
+
+        /* Style for progress bars */
+        .progress-bar { 
+            background-color: #007bff; 
+        }
+
+        /* Style for list items in Dataset Info */
+        .list-group-item { 
+            font-weight: 500; 
+        }
+
+        /* Navigation tabs styling */
+        .nav-tabs .nav-link {
+            color: #ecf0f1; /* Light text color */
+            border: none;
+            transition: background-color 0.3s; /* Smooth transition */
+        }
+        .nav-tabs .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1); /* Light hover effect */
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #add8e6; /* Solid light blue */
+    color: #fff;
+    box-shadow: 0 0 10px rgba(173, 216, 230, 0.5); /* Faint blue glow */
+        }
+
+        /* Button styling */
+        .btn-primary {
+            background-color: #2980b9;
+            border-color: #2980b9;
+            transition: background-color 0.3s, transform 0.3s; /* Smooth transition */
+        }
+        .btn-primary:hover {
+            background-color: #3498db;
+    	    border-color: #3498db;
+    	    transform: translateY(-2px); /* Lift effect on hover */
+    	    box-shadow: 0 0 10px rgba(10, 10, 255, 0.5); /* Faint dark blue glow */
+        }
+
+        /* Image hover effect */
+        img {
+            transition: transform 0.3s; /* Smooth image scaling */
+        }
+        img:hover {
+            transform: scale(1.05); /* Scale image on hover */
+        }
+
+        /* Image preview container */
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px; /* Spacing between images */
+        }
+        .preview-image {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* Shadow for preview images */
+            transition: transform 0.3s; /* Smooth transition */
+        }
+        .preview-image:hover {
+            transform: scale(1.05); /* Scale effect on hover */
+        }
+
+        /* Container for predictions */
+        .predictions-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px; /* Space between predictions and the upload section */
+        }
+        .prediction-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .predicted-image {
+            max-width: 100px;
+            max-height: 100px;
+            margin-right: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s; /* Smooth transition */
+        }
+        .predicted-image:hover {
+            transform: scale(1.05); /* Scale effect on hover */
+        }
+    </style>
+</head>
+<body>
+    <h1 class="text-left my-4" style="font-family: 'Helvetica', sans-serif; font-weight: bold; color: white; font-size: 4rem;">
+    Gravitational Wave<br>Classification
+</h1>
+    <ul class="nav nav-tabs justify-content-center" id="tabContent">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#uploadTab">Upload & Predict</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#infoTab">Info</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Upload & Predict Tab with Background -->
+        <div class="tab-pane fade show active full-width-section upload-background" id="uploadTab">
+            <form method="post" enctype="multipart/form-data" class="text-center" aria-labelledby="fileInputLabel" onsubmit="return validateUpload()">
+                <label for="fileInput" id="fileInputLabel" class="form-label">Choose images to upload</label>
+                <input type="file" class="form-control mb-3" name="files" id="fileInput" accept="image/*" multiple onchange="previewImages(event)">
+                <div id="fileHelp" class="form-text" style="color: white;">Supported formats: JPG, PNG, GIF, etc.</div>
+                <button type="submit" class="btn btn-primary mt-3">Upload and Predict</button>
+            </form>
+            <div id="imagePreviewContainer" class="mt-4">
+                <h3>Uploaded Images:</h3>
+                <div class="image-preview-container" id="previewContainer"></div>
+            </div>
+
+    <!-- Predictions Display Section -->
+    {% if predictions %}
+        <div class="mt-4 predictions-container">
+            <h3>Predictions:</h3>
+            {% for pred in predictions %}
+                <div class="prediction-item">
+                    <img src="{{ pred.image_url }}" alt="Uploaded Image" class="predicted-image">
+                    <div>
+                        <span class="class-name">{{ pred.name }}:</span>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{ pred.confidence * 100 }}%" aria-valuenow="{{ pred.confidence * 100 }}" aria-valuemin="0" aria-valuemax="100">{{ (pred.confidence * 100) | round(2) }}%</div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="text-center mt-4">
+                <a href="{{ url_for('download_predictions') }}" class="btn btn-primary">Download Predictions as CSV</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+        <!-- Info Tab with Background -->
+        <div class="tab-pane fade full-width-section info-background" id="infoTab">
+            <div>
+                <h3>Model Information</h3>
+                <p>The model utilizes the state-of-the-art <strong>MobileNetV2 architecture</strong> pre-trained on the <em>ImageNet</em> dataset, omitting the top layers. To enhance performance, the last 40 layers of the base model are unfrozen for fine-tuning, enabling the model to adapt specifically to the dataset.</p>
+                <p>Custom classification layers are incorporated to augment the model's capacity. These layers consist of dense layers with 1024, 512, and 256 units, including BatchNormalization, L2 regularization, and Dropout to mitigate overfitting. The model is compiled using the AdamW optimizer, which features weight decay for regularization, alongside categorical cross-entropy as the loss function. This approach seeks to balance model complexity with regularization to achieve effective classification.</p>
+
+<p><strong>Performance Metrics:</strong></p>
+<ul>
+    <li><strong>Train Accuracy:</strong> 0.9949</li>
+    <li><strong>Train F1 Score:</strong> 0.9948</li>
+    <li><strong>Train Precision:</strong> 0.9951</li>
+    <li><strong>Train Recall:</strong> 0.9949</li>
+    <li><strong>Validation Accuracy:</strong> 0.9685</li>
+    <li><strong>Validation F1 Score:</strong> 0.9685</li>
+    <li><strong>Validation Precision:</strong> 0.9690</li>
+    <li><strong>Validation Recall:</strong> 0.9685</li>
+    <li><strong>Test Accuracy:</strong> 0.9682</li>
+    <li><strong>Test F1 Score:</strong> 0.9681</li>
+    <li><strong>Test Precision:</strong> 0.9693</li>
+    <li><strong>Test Recall:</strong> 0.9682</li>
+</ul>
+
+                <p><strong>Block Diagram:</strong></p>
+		<div class="text-center">
+                	<img src="/static/images/model_block_diagram.jpeg" alt="Model Block Diagram" style="max-width: 100%; height: auto;">
+            </div>
+
+            <div class="mt-4">
+                <h3>Dataset Information</h3>
+                <p>This model was trained on the <a href="https://www.kaggle.com/datasets/tentotheminus9/gravity-spy-gravitational-waves" target="_blank" style="color: #f39c12;">Gravity Spy Gravitational Waves dataset</a>, which contains spectrogram images of time-frequency data recorded by LIGO. The dataset includes multiple classes corresponding to noise patterns and real gravitational wave signals, making it ideal for multiclass classification using convolutional neural networks (CNNs).</p>
+                <p>Classes:</p>
+                <ul class="list-group">
+    <li class="list-group-item class-name" style="color: black;">1080Lines: <span style="color: darkgrey;">These glitches consist of narrow, evenly spaced vertical lines in spectrograms, likely originating from 1080 Hz lines in the detector's electronics.</span></li>
+    <li class="list-group-item class-name" style="color: black;">1400Ripples: <span style="color: darkgrey;">These glitches are characterized by distinct ripple patterns at around 1400 Hz, potentially from electrical sources or instrumental vibrations.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Air_Compressor: <span style="color: darkgrey;">Glitches that resemble the signals produced by air compressors in the vicinity of the detectors, often due to local environmental noise.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Blip: <span style="color: darkgrey;">Short, isolated, high-frequency bursts with unknown origins; these are among the most common glitches seen in LIGO data.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Chirp: <span style="color: darkgrey;">These resemble gravitational wave signals with increasing frequency over time, but are caused by environmental or instrumental noise rather than astrophysical sources.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Extremely_Loud: <span style="color: darkgrey;">Glitches with intense amplitude that often saturate the spectrogram, obscuring detailed features.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Helix: <span style="color: darkgrey;">Characterized by spiral or helical shapes in the spectrogram, often caused by specific mechanical disturbances.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Koi_Fish: <span style="color: darkgrey;">Named for its visual resemblance to koi fish, this glitch class has complex, overlapping structures.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Light_Modulation: <span style="color: darkgrey;">Caused by light scattering or environmental effects, leading to periodic intensity variations in the detector.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Low_Frequency_Burst: <span style="color: darkgrey;">Broad, low-frequency bursts often due to environmental sources or machinery near the detector.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Low_Frequency_Lines: <span style="color: darkgrey;">Low-frequency, continuous lines caused by local machinery or infrastructure interference.</span></li>
+    <li class="list-group-item class-name" style="color: black;">No_Glitch: <span style="color: darkgrey;">Denotes data segments with no detectable glitch or interference.</span></li>
+    <li class="list-group-item class-name" style="color: black;">None_of_the_Above: <span style="color: darkgrey;">Used for glitches that do not fit known classifications, often prompting further investigation.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Paired_Doves: <span style="color: darkgrey;">Appears as two similar glitch patterns side by side, thought to be environmental or mechanical in origin.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Power_Line: <span style="color: darkgrey;">Continuous lines in spectrograms from electrical grid interference, typically at 60 Hz and harmonics.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Repeating_Blips: <span style="color: darkgrey;">Repeated occurrences of blip-like glitches in rapid succession.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Scattered_Light: <span style="color: darkgrey;">Fluctuations due to light scattering inside the detector, causing irregular patterns.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Scratchy: <span style="color: darkgrey;">Random, fine-grained noise patterns, often caused by equipment interference.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Tomte: <span style="color: darkgrey;">Named after a Scandinavian mythological creature, Tomte glitches have unusual shapes that resist easy classification.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Violin_Mode: <span style="color: darkgrey;">Narrow-band glitches at frequencies associated with the detector’s suspension wires, named for their resemblance to violin string modes.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Wandering_Line: <span style="color: darkgrey;">Characterized by drifting frequency over time, likely due to unstable mechanical components.</span></li>
+    <li class="list-group-item class-name" style="color: black;">Whistle: <span style="color: darkgrey;">High-pitched, sweeping frequency signals, possibly from nearby radio interference.</span></li>
+</ul>
+                <p><strong>Example Image for 22 Classes:</strong></p>
+		<div class="text-center">
+                	<img src="/static/images/class_example.jpeg" alt="Example Image for Classes" style="max-width: 100%; height: auto;">
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script>
+        function previewImages(event) {
+        const files = event.target.files;
+        const previewContainer = document.getElementById('previewContainer');
+        previewContainer.innerHTML = ''; // Clear existing previews
+        
+        Array.from(files).forEach(file => {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.classList.add('preview-image');
+            previewContainer.appendChild(img);
+        });
+    }
+
+    function validateUpload() {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length === 0) {
+            alert("No images selected! Please choose images to upload.");
+            return false; // Prevent form submission
+        }
+        return true; // Allow form submission
+    }
+</script>
+</body>
+</html>
