@@ -1,11 +1,13 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"   # Reduce TensorFlow logging verbosity
+
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import numpy as np
-import os
 import csv
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static/uploads")
@@ -94,4 +96,4 @@ def download_predictions():
     return send_from_directory(app.root_path, "predictions.csv", as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
