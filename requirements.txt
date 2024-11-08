@@ -1,3 +1,4 @@
+pip install --upgrade pip
 absl-py==2.1.0
 astunparse==1.6.3
 blinker==1.8.2
@@ -34,7 +35,7 @@ opt_einsum==3.4.0
 packaging==24.1
 pandas==2.2.3
 pillow==9.2.0
-protobuf==3.19.6
+protobuf==4.21.0
 Pygments==2.18.0
 pyparsing==3.2.0
 python-dateutil==2.9.0.post0
