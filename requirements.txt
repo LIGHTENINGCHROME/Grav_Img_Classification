@@ -42,7 +42,7 @@ pytz==2024.2
 requests==2.32.3
 rich==13.9.3
 six==1.16.0
-tensorflow-cpu==2.9.0
+tensorflow-cpu==2.18.0
 tensorboard==2.9.0
 tensorboard-data-server==0.6.1
 tensorflow-io-gcs-filesystem==0.27.0
