@@ -96,4 +96,4 @@ def download_predictions():
     return send_from_directory(app.root_path, "predictions.csv", as_attachment=True)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=1704, debug=False)
